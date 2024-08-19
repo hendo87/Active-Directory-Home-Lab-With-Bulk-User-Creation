@@ -70,3 +70,37 @@ Now to configure the DHCP and setup a scope. The whole purpose of DHCP is to all
 
 ![Screenshot (111)](https://github.com/user-attachments/assets/5e417d5f-b0bc-46ee-94a9-c11d2318705b)
 
+Now that Active Directory is configured and my Domain Controller is configured as well, I use a Powershell script to create over 1000 user accounts
+
+![Screenshot (114)](https://github.com/user-attachments/assets/017fcec5-ef0e-41ee-93fb-4b893ac9a9d1)
+
+
+<br>
+<li>$PASSWORD_FOR_USERS = "Password1" ( We are creating a password variable. All of our users will use "Password1" as the password)</li>
+<li>$USER_FIRST_LAST_LIST = Get-Content .\names.txt ( We are taking names from the " names.txt " file and storing them in the variable )</li>
+<li>$password = ConvertTo-SecureString $PASSWORD_FOR_USERS -AsPlainText - Force ( This takes the plain text password and creates it into a object )</li>
+<li>New-ADOrganization -Name _USERS -ProtectedFromAccidentalDeletion $false ( This creates a new Organizational Unit called " Users " )</li>
+<li>foreach ($n in $USER_FIRST_Last_List) -- ( creating a loop , $n is a object and will iterate through our list)</li>
+<li>$first = $n.Split(" ")[0].ToLower() -- (This splits the names. Element 0 becomes the first name. Also converts the text to all lower case )</li>
+<li>$last = $n.Split( " " )[1].ToLower() -- (Element 1 becomes the last name. Also converts text to lower case)</li>
+<li>$username = "$($first.Substring(0,1))$($last)".ToLower() -- (We are taking the first character from the first name and appending it to the last name to create the username. Example RHenderson)</li>
+<li>Write-Host "Creating user: $($username)" - BackgroundColor Black -ForegroundColor Cyan ( This is creating output on the screen every time a user is created)</li><br>
+<li>New-ADUser -AccountPassword $password ( The rest of the code is inputting the information needed to create the user in Active Directory)</li> <br>
+<p>-GivenName $first</p>
+<p>-Surename $last</p>
+<p>-DisplayName $username</p>
+<p>-Name $username</p>
+<p>-EmployeeID $username</p>
+<p>-PasswordNeverExpires $true</p>
+<p>-Path "ou=_USERS,$(([ADSI]' "").distinguishedName)"</p>
+<p>-Enabled $true</p>
+
+
+![Screenshot (115)](https://github.com/user-attachments/assets/6e5c8462-839d-461a-9f21-17f55450ada1)
+
+<br>
+
+It is now time to create a new Virtual Machine that will act as a user in the domain. I name this machine CLIENT1.I configure the network adapter so that it is not NAT and can't connect to the internet on my local network. The only way this Virtual Machine should be able to connect to the internet is by being assigned an IP from the DC on the Server VM. Refer to the Diagram at the beginning. I have to change the network adapter to be on the same internal network as the Domain Controller, in this case VMnet0
+
+![Screenshot (116)](https://github.com/user-attachments/assets/17f88bd9-50d7-4ec9-aef8-4defa9eb1a8b)
+
